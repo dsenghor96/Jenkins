@@ -66,8 +66,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    docker compose -f /var/jenkins_home/workspace/portfolio-pipeline/docker-compose.yml down || true
-                    docker compose -f /var/jenkins_home/workspace/portfolio-pipeline/docker-compose.yml up -d
+                    cd /var/jenkins_home/workspace/portfolio-pipeline
+                    docker compose down || true
+                    docker compose up -d
                 '''
             }
         }
