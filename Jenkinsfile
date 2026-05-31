@@ -33,12 +33,15 @@ pipeline {
         stage('Test Backend') {
             steps {
                 sh '''
-                    cd api
-                    npm install
-                    npm test || echo "Aucun test defini, etape ignoree"
+                    docker run --rm \
+                    -v $(pwd)/api:/app \
+                    -w /app \
+                    node:20-alpine \
+                    sh -c "npm install && npm test || echo 'Aucun test defini, etape ignoree'"
                 '''
-            }
-        }
+    }
+}
+
 
         stage('Push to Docker Hub') {
             steps {
