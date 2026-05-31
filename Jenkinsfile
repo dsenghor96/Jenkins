@@ -66,7 +66,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    cd /mnt/c/Users/DIEY-NA/desktop/portfolio_perso
+                    pwd
+                     ls -la
                     docker compose down || true
                     docker compose up -d --no-build
                 '''
