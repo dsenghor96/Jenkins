@@ -1,0 +1,48 @@
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: portfolio_mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - portfolio-network
+
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: portfolio_backend
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/portfolio_perso
+      - PORT=3000
+      - CLIENT_ORIGIN=http://localhost:5173
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - portfolio-network
+
+  frontend:
+    build:
+      context: ./ux_react
+      dockerfile: Dockerfile
+    container_name: portfolio_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - portfolio-network
+
+volumes:
+  mongodb_data:
+  uploads_data:
+
+networks:
+  portfolio-network:
+    driver: bridge

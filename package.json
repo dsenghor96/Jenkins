@@ -1,0 +1,29 @@
+{
+  "name": "portfolio_perso",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:react": "vite --config ux_react/vite.config.js --host 127.0.0.1",
+    "dev:api": "node --watch api/index.js",
+    "dev:client": "npm run dev:react",
+    "dev:server": "npm run dev:api",
+    "build": "vite build --config ux_react/vite.config.js",
+    "preview": "vite preview --config ux_react/vite.config.js --host 127.0.0.1",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "lucide-react": "^1.16.0",
+    "mongoose": "latest",
+    "multer": "^2.1.1",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "^7.15.1",
+    "three": "^0.184.0",
+    "vite": "latest"
+  }
+}
