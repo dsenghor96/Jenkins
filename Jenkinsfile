@@ -6,6 +6,8 @@ pipeline {
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/portfolio-frontend"
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/portfolio-backend"
         GITHUB_REPO    = 'https://github.com/dsenghor96/Jenkins'
+        DOCKER_NETWORK = 'portfolio_perso_portfolio-network'
+        SONAR_HOST_URL = 'http://sonarqube:9000'
     }
 
     stages {
@@ -34,13 +36,29 @@ pipeline {
             steps {
                 sh '''
                     docker run --rm \
-                    -v $(pwd)/api:/app \
-                    -w /app \
+                    --volumes-from jenkins \
+                    -w "${WORKSPACE}/api" \
                     node:20-alpine \
                     sh -c "npm install && npm test || echo 'Aucun test defini, etape ignoree'"
                 '''
-    }
-}
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        docker run --rm \
+                        --network ${DOCKER_NETWORK} \
+                        --volumes-from jenkins \
+                        -w "${WORKSPACE}" \
+                        -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
+                        -e SONAR_TOKEN="${SONAR_TOKEN}" \
+                        sonarsource/sonar-scanner-cli
+                    '''
+                }
+            }
+        }
 
 
         stage('Push to Docker Hub') {
