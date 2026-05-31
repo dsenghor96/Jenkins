@@ -66,10 +66,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    cd /var/jenkins_home/workspace/portfolio-pipeline
                     docker compose down || true
-                    docker compose pull
-                    docker compose up -d
+                    docker compose up -d --no-build
                 '''
             }
         }
