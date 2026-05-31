@@ -66,8 +66,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    docker compose down --remove-orphans || true
-                    docker compose up -d --build
+                    docker compose -f /var/jenkins_home/workspace/portfolio-pipeline/docker-compose.yml down || true
+                    docker compose -f /var/jenkins_home/workspace/portfolio-pipeline/docker-compose.yml up -d
                 '''
             }
         }
