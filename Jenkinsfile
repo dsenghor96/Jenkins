@@ -67,7 +67,7 @@ pipeline {
             steps {
                 sh '''
                     pwd
-                     ls -la
+                    ls -la
                     docker compose down || true
                     docker compose up -d --no-build
                 '''
