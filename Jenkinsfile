@@ -30,17 +30,9 @@ pipeline {
                         -Dsonar.projectKey=portfolio-mern \
                         -Dsonar.projectName='Portfolio MERN' \
                         -Dsonar.sources=api,ux_react/src \
-                        -Dsonar.working.directory="${WORKSPACE}/.scannerwork" \
-                        -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/**
+                        -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/** \
+                        -Dsonar.qualitygate.wait=true
                     '''
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
