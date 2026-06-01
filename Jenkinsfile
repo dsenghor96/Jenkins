@@ -18,6 +18,8 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
+                        rm -rf .scannerwork
+
                         docker run --rm \
                         --network portfolio_perso_portfolio-network \
                         --volumes-from portfolio_jenkins \
@@ -28,6 +30,7 @@ pipeline {
                         -Dsonar.projectKey=portfolio-mern \
                         -Dsonar.projectName='Portfolio MERN' \
                         -Dsonar.sources=api,ux_react/src \
+                        -Dsonar.working.directory="${WORKSPACE}/.scannerwork" \
                         -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/**
                     '''
                 }
