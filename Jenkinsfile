@@ -17,13 +17,19 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh """
-                        sonar-scanner \
+                    sh '''
+                        docker run --rm \
+                        --network portfolio_perso_portfolio-network \
+                        --volumes-from portfolio_jenkins \
+                        -w "${WORKSPACE}" \
+                        sonarsource/sonar-scanner-cli \
+                        -Dsonar.host.url="$SONAR_HOST_URL" \
+                        -Dsonar.login="$SONAR_AUTH_TOKEN" \
                         -Dsonar.projectKey=portfolio-mern \
                         -Dsonar.projectName='Portfolio MERN' \
                         -Dsonar.sources=api,ux_react/src \
                         -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/**
-                    """
+                    '''
                 }
             }
         }
