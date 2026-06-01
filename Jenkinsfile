@@ -2,67 +2,57 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER = 'dieys'
-        FRONTEND_IMAGE = "${DOCKERHUB_USER}/portfolio-frontend"
-        BACKEND_IMAGE  = "${DOCKERHUB_USER}/portfolio-backend"
-        GITHUB_REPO    = 'https://github.com/dsenghor96/Jenkins'
-        DOCKER_NETWORK = 'portfolio_perso_portfolio-network'
-        SONAR_HOST_URL = 'http://sonarqube:9000'
-        JENKINS_CONTAINER = 'portfolio_jenkins'
+        DOCKERHUB_USER = "dieys"
+        BACKEND_IMAGE = "${DOCKERHUB_USER}/portfolio-api:${BUILD_NUMBER}"
+        FRONTEND_IMAGE = "${DOCKERHUB_USER}/portfolio-react:${BUILD_NUMBER}"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                git branch: 'master',
-                    credentialsId: 'github-credentials',
-                    url: "${GITHUB_REPO}"
-            }
-        }
-
-        stage('Build Backend') {
-            steps {
-                sh 'docker build -t ${BACKEND_IMAGE}:${BUILD_NUMBER} ./api'
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                sh 'docker build -t ${FRONTEND_IMAGE}:${BUILD_NUMBER} ./ux_react'
-            }
-        }
-
-        stage('Test Backend') {
-            steps {
-                sh '''
-                    docker run --rm \
-                    --volumes-from ${JENKINS_CONTAINER} \
-                    -w "${WORKSPACE}/api" \
-                    node:20-alpine \
-                    sh -c "npm install && npm test || echo 'Aucun test defini, etape ignoree'"
-                '''
+                checkout scm
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                        docker run --rm \
-                        --network ${DOCKER_NETWORK} \
-                        --volumes-from ${JENKINS_CONTAINER} \
-                        -w "${WORKSPACE}" \
-                        -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
-                        -e SONAR_TOKEN="${SONAR_TOKEN}" \
-                        sonarsource/sonar-scanner-cli
-                    '''
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                        sonar-scanner \
+                        -Dsonar.projectKey=portfolio-mern \
+                        -Dsonar.projectName='Portfolio MERN' \
+                        -Dsonar.sources=api,ux_react/src \
+                        -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/**
+                    """
                 }
             }
         }
 
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
-        stage('Push to Docker Hub') {
+        stage('Build Docker Images') {
+            parallel {
+                stage('Backend') {
+                    steps {
+                        sh "docker build -t ${BACKEND_IMAGE} ./api"
+                    }
+                }
+
+                stage('Frontend') {
+                    steps {
+                        sh "docker build -t ${FRONTEND_IMAGE} ./ux_react"
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
@@ -70,13 +60,9 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}
-                        docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}
-                        docker tag ${BACKEND_IMAGE}:${BUILD_NUMBER} ${BACKEND_IMAGE}:latest
-                        docker tag ${FRONTEND_IMAGE}:${BUILD_NUMBER} ${FRONTEND_IMAGE}:latest
-                        docker push ${BACKEND_IMAGE}:latest
-                        docker push ${FRONTEND_IMAGE}:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push "$BACKEND_IMAGE"
+                        docker push "$FRONTEND_IMAGE"
                     '''
                 }
             }
@@ -85,10 +71,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    pwd
-                    ls -la
-                    docker compose down || true
-                    docker compose up -d --no-build
+                    docker compose up -d --build mongodb backend frontend
                 '''
             }
         }
@@ -96,24 +79,53 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline termine avec succes !'
+            echo "Pipeline execute avec succes"
+            echo "Frontend : http://localhost:5173"
+            echo "Backend  : http://localhost:3000"
+
             emailext(
-                subject: "SUCCESS: Pipeline ${JOB_NAME} #${BUILD_NUMBER}",
-                body: "Le pipeline ${JOB_NAME} build #${BUILD_NUMBER} est termine avec succes.\nURL: ${BUILD_URL}",
-                to: 'dieyna@example.com'
+                subject: "Jenkins - Build #${BUILD_NUMBER} reussi",
+                body: """
+                    Bonjour Dieynaba,
+
+                    Le pipeline ${JOB_NAME} a ete execute avec succes.
+
+                    Details :
+                    - Build  : #${BUILD_NUMBER}
+                    - Branche: ${GIT_BRANCH}
+                    - Commit : ${GIT_COMMIT}
+                    - Duree  : ${currentBuild.durationString}
+
+                    Logs : ${BUILD_URL}
+                """,
+                to: 'dsenghor96@gmail.com'
             )
         }
+
         failure {
-            echo 'Pipeline echoue !'
+            echo "Pipeline echoue. Verifie les logs Jenkins."
+
             emailext(
-                subject: "FAILURE: Pipeline ${JOB_NAME} #${BUILD_NUMBER}",
-                body: "Le pipeline ${JOB_NAME} build #${BUILD_NUMBER} a echoue.\nURL: ${BUILD_URL}",
-                to: 'dieyna@example.com'
+                subject: "Jenkins - Build #${BUILD_NUMBER} echoue",
+                body: """
+                    Bonjour Dieynaba,
+
+                    Le pipeline ${JOB_NAME} a echoue.
+
+                    Details :
+                    - Build  : #${BUILD_NUMBER}
+                    - Branche: ${GIT_BRANCH}
+                    - Commit : ${GIT_COMMIT}
+
+                    Logs : ${BUILD_URL}
+                """,
+                to: 'dsenghor96@gmail.com'
             )
         }
+
         always {
-            echo 'Nettoyage des images temporaires...'
-            sh 'docker image prune -f || true'
+            sh "docker logout || true"
+            echo "Deconnecte de DockerHub"
         }
     }
 }

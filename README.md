@@ -57,8 +57,7 @@ portfolio_perso/
 |-- api/              # Backend Express
 |-- ux_react/         # Frontend React
 |-- docker-compose.yml
-|-- Jenkinsfile
-`-- sonar-project.properties
+`-- Jenkinsfile
 ```
 
 ## Notes
