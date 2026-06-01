@@ -127,7 +127,7 @@ pipeline {
 
         always {
             sh "docker logout || true"
-            echo "Deconnecte de DockerHub"
+            echo "Deconnectee de DockerHub"
         }
     }
 }
