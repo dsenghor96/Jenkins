@@ -8,6 +8,7 @@ pipeline {
         GITHUB_REPO    = 'https://github.com/dsenghor96/Jenkins'
         DOCKER_NETWORK = 'portfolio_perso_portfolio-network'
         SONAR_HOST_URL = 'http://sonarqube:9000'
+        JENKINS_CONTAINER = 'portfolio_jenkins'
     }
 
     stages {
@@ -36,7 +37,7 @@ pipeline {
             steps {
                 sh '''
                     docker run --rm \
-                    --volumes-from jenkins \
+                    --volumes-from ${JENKINS_CONTAINER} \
                     -w "${WORKSPACE}/api" \
                     node:20-alpine \
                     sh -c "npm install && npm test || echo 'Aucun test defini, etape ignoree'"
@@ -50,7 +51,7 @@ pipeline {
                     sh '''
                         docker run --rm \
                         --network ${DOCKER_NETWORK} \
-                        --volumes-from jenkins \
+                        --volumes-from ${JENKINS_CONTAINER} \
                         -w "${WORKSPACE}" \
                         -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
                         -e SONAR_TOKEN="${SONAR_TOKEN}" \
@@ -112,7 +113,7 @@ pipeline {
         }
         always {
             echo 'Nettoyage des images temporaires...'
-            sh 'docker image prune -f'
+            sh 'docker image prune -f || true'
         }
     }
 }
