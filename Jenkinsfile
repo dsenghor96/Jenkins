@@ -72,6 +72,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
+                    docker rm -f portfolio_mongodb portfolio_backend portfolio_frontend || true
                     docker compose up -d --build mongodb backend frontend
                 '''
             }
