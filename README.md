@@ -1,8 +1,10 @@
-# Portfolio personnel avec CI/CD Jenkins
+# Projet d'intégration Docker + Jenkins + SonarQube
 
 ![Jenkins Pipeline](./jenkins.webp)
 
-Ce projet est un portfolio web personnel qui met en avant des projets Cloud, DevOps, réseaux, système et développement web. Il inclut un frontend React/Vite, une API Node.js/Express, une base de données MongoDB, la conteneurisation Docker, et un pipeline Jenkins pour l'intégration continue.
+Ce projet montre une intégration complète d'une application web avec Docker Compose, une pipeline CI/CD Jenkins et une analyse de qualité SonarQube.
+
+Il contient un frontend React/Vite, une API Node.js/Express, une base de données MongoDB, des images Docker pour le frontend et le backend, ainsi qu'un workflow Jenkins pour l'analyse, la construction et le déploiement.
 
 ## Aperçu du projet
 
@@ -10,18 +12,17 @@ Ce projet est un portfolio web personnel qui met en avant des projets Cloud, Dev
 - Backend Express dans `api`
 - Base de données MongoDB gérée par Docker Compose
 - Analyse de code avec SonarQube
-- Pipeline Jenkins défini dans `Jenkinsfile`
-- Déploiement avec Docker Compose et images Docker
+- Pipeline Jenkins définie dans `Jenkinsfile`
+- Déploiement des services via Docker Compose
 
 ## Fonctionnalités principales
 
-- Portfolio responsive avec pages : accueil, compétences, projets et contact
-- Interface d'administration privée
-- API backend pour la gestion des contenus
-- Téléchargement de CV
-- Conteneurisation complète via Docker Compose
-- Pipeline CI/CD Jenkins
-- Analyse de qualité avec SonarQube
+- Architecture Docker Compose multi-services
+- Pipeline CI/CD Jenkins avec build et déploiement
+- Analyse de qualité SonarQube
+- Construction et publication d'images Docker
+- Backend Express connecté à MongoDB
+- Frontend React/Vite servi en conteneur
 
 ## Stack technique
 
